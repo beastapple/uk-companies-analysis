@@ -6,9 +6,9 @@ A project to analyse and work with publicly available company data in the UK.
 My aim is to use Python and specifically Streamlit to create a user-friendly UX for this project.
 
 ## Must:
-- Accept the upload of a CSV spreadsheet.
+- ~~Accept the upload of a CSV spreadsheet.~~ Complete
 - Broadly analyse the csv of Companies House data as from https://find-and-update.company-information.service.gov.uk/advanced-search
-- Create a dashboard to summarise: number of companies; number of companies by company_type; top 100 SIC codes and number of companies per those SIC codes; a graph of the incorpoation dates broken down into months.
+- Create a dashboard to summarise: ~~number of companies~~ complete; number of companies by company_type; top 100 SIC codes and number of companies per those SIC codes; a graph of the incorpoation dates broken down into months.
 
 ## Should:
 - Allow for filtering and subsequent dashboard / analysis information based on the selected filters.
@@ -16,7 +16,7 @@ My aim is to use Python and specifically Streamlit to create a user-friendly UX 
   
 ## Could:
 - Allow the upload of multiple CSVs while checking for & removing duplicates based on Company Number.
-- Check the spreadsheet has the right headers/format and if not, display help information and cancel any further analysis.
+- ~~Check the spreadsheet has the right headers/format and if not, display help information and cancel any further analysis.~~ Complete
 
 ## Won't:
 - Extract the postcode from the Registered address to analyse location. (And then, display on a map.)
