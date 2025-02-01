@@ -15,7 +15,7 @@ My aim is to use Python and specifically Streamlit to create a user-friendly UX 
 - Be able to separate companies with multiple SIC codes so they are counted accurately against each, e.g. a company with SICs "56103 56210" is counted as 1 x "56103" and 1 x "56210", not 1 x "56103 56210"
   
 ## Could:
-- Allow the upload of multiple CSVs while checking for & removing duplicates based on Company Number.
+- ~~Allow the upload of multiple CSVs while checking for & removing duplicates based on Company Number.~~ Complete
 - ~~Check the spreadsheet has the right headers/format and if not, display help information and cancel any further analysis.~~ Complete
 
 ## Won't:
