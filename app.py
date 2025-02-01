@@ -2,47 +2,70 @@ import streamlit as st
 import pandas as pd
 
 st.markdown(""" # Companies Data Dashboard  
-There's nothing here yet! This application will allow for filtering and analysis of company information exported from the [Companies House Advanced Search function](https://find-and-update.company-information.service.gov.uk/advanced-search).         
+This application will allow for filtering and analysis of company information exported from the [Companies House Advanced Search function](https://find-and-update.company-information.service.gov.uk/advanced-search).         
 """)
 
 st.divider()
 # @st.cache_data
 
-# Step 1: Import the CSV spreadsheet data.
+# Step 1: Import the CSV spreadsheet data, whether one or multiple files, and combine into one document while removing duplicates.
+
+# Sidebar upload.
+raw_companies_data = st.sidebar.file_uploader("Upload CSV(s) from Companies House to generate a data dashboard.", type=['csv'], accept_multiple_files=True)
+upload_done = st.sidebar.button("Process Files") # Need to style better as looks "inactive"
+
+# Combines all of the uploaded files into one file by deduplicating based on unique company number.
+
+all_files = pd.DataFrame({})
+
+def deduplicate_data(df, dedupe_column):
+    if dedupe_column in df.columns.values:
+        deduped.sort_values(by=[dedupe_column], ascending=[True])
+        deduped.drop_duplicates(subset=dedupe_column, keep='first', inplace=True)
+        st.write("List deduplicated by company number.")
+    else:
+        st.write("Please upload files and click the 'Process files' button when done.")
+    return deduped
+
+if upload_done:
+    st.write(f"Processing the following files: {raw_companies_data}") # Need to figure out how to get it to just say the name and not the full shebang of info.
+    all_files = pd.concat(pd.read_csv(csv_file) for csv_file in raw_companies_data)
+
+deduped = all_files.copy()
+deduped = deduplicate_data(all_files, 'company_number') # Would be cool to add this as a "selector" so the user can choose which column to dedupe on, rather than hard coded.
+
+# For testing
+# st.write(deduped.head(5))
+# st.write(f"The dataset is {len(deduped)} rows long.")
+# st.write(deduped.columns.values)
+
+# Step 2. Validate the CSV upload is the right format/from Companies House and display the dashboard.
 
 # Creates a column list to validate the CSV upload against.
 companies_house_headers = pd.DataFrame(columns=['company_name', 'company_number', 'company_status', 'company_type', 'company_subtype', 'dissolution_date', 'incorporation_date', 'removed_date', 'registered_date', 'nature_of_business', 'registered_office_address'])
 
-# Sidebar upload.
-raw_companies_data = st.sidebar.file_uploader("Upload CSV from Companies House to generate a data dashboard.", type=['csv'])
-
-# Validates the CSV upload is the right format/from Companies House.
-if raw_companies_data:
-    unvalidated_csv = pd.read_csv(raw_companies_data)
+if len(deduped) > 1:
+    unvalidated_csv = deduped
 #    st.write(unvalidated_csv.columns.values)
     if unvalidated_csv.columns.values.all() == companies_house_headers.columns.values.all():
-        raw_companies_data = unvalidated_csv
-#        st.write("CSV accepted.")
+        st.write("CSV validated.")
     else:
         st.write(f"Unexpected columns. Expected {companies_house_headers}")
+    
+    # Dashboard
+    total_companies = len(deduped['company_number'])
+    total_active = deduped['company_status'].value_counts().get('Active', 0)
+    total_private = deduped['company_type'].value_counts().get('Private limited company', 0)
 
-# For testing.
-st.write(f"The dataset is {len(raw_companies_data)} rows long.")
-st.write(raw_companies_data.columns.values)
-st.write(raw_companies_data.head(5))
+    left_column, middle_column, right_column = st.columns(3)
+    with left_column:
+        st.subheader("Total Companies:")
+        st.subheader(f"{total_companies:,}")
+    with middle_column:
+        st.subheader("Total Active Companies:")
+        st.subheader(f"{total_active:,}")
+    with right_column:
+        st.subheader("Total Private Limited Companies")
+        st.subheader(f"{total_private:,}")
 
-# Dashboard
-total_companies = len(raw_companies_data['company_number'])
-total_active = raw_companies_data['company_status'].value_counts().get('Active', 0)
-total_private = raw_companies_data['company_type'].value_counts().get('Private limited company', 0)
-
-left_column, middle_column, right_column = st.columns(3)
-with left_column:
-    st.subheader("Total Companies:")
-    st.subheader(f"{total_companies:,}")
-with middle_column:
-    st.subheader("Total Active Companies:")
-    st.subheader(f"{total_active:,}")
-with right_column:
-    st.subheader("Total Private Limited Companies")
-    st.subheader(f"{total_private:,}")
+    st.write(deduped)
