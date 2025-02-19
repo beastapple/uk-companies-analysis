@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-import plotly.graph_objects as go
 
 st.markdown(""" # Companies Data Dashboard  
 This application will allow for filtering and analysis of company information exported from the [Companies House Advanced Search function](https://find-and-update.company-information.service.gov.uk/advanced-search).         
