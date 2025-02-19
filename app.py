@@ -24,7 +24,7 @@ def deduplicate_data(df, dedupe_column):
     if dedupe_column in df.columns.values:
         deduped.sort_values(by=[dedupe_column], ascending=[True])
         deduped.drop_duplicates(subset=dedupe_column, keep='first', inplace=True)
-        st.write("List deduplicated by company number.")
+        st.sidebar.write("List deduplicated by company number.")
     else:
         st.write("Please upload files and click the 'Process files' button when done.")
     return deduped
@@ -39,7 +39,7 @@ deduped = deduplicate_data(all_files, 'company_number') # Would be cool to add t
 # For testing
 # st.write(deduped.head(5))
 # st.write(f"The dataset is {len(deduped)} rows long.")
-# st.write(deduped.columns.values)
+# 
 
 # Step 2. Validate the CSV upload is the right format/from Companies House.
 
@@ -50,11 +50,15 @@ def validate_csv():
     unvalidated_csv = deduped
 #    st.write(unvalidated_csv.columns.values)
     if unvalidated_csv.columns.values.all() == companies_house_headers.columns.values.all():
-        st.write("CSV validated.")
+        st.sidebar.write("CSV validated.")
     else:
-        st.write(f"Unexpected columns. Expected {companies_house_headers}")
+        st.sidebar.write(f"Unexpected columns. Expected {companies_house_headers}")
+        return
 
 # Step 3. Wrangles the SIC codes (nature_of_business column) for analysis.
+
+# Creates a key for the SIC codes to provide an in situ description.
+sic_descriptions = pd.read_csv('SIC07_CH_condensed_list_en.csv', dtype=object) # This comes from https://www.gov.uk/government/publications/standard-industrial-classification-of-economic-activities-sic
 
 def explode_sic(): # https://www.geeksforgeeks.org/how-to-split-explode-pandas-dataframe-string-entry-to-separate-rows/
     # Explode the SICs column so that companies with multiple SICs are accounted properly.
@@ -62,12 +66,19 @@ def explode_sic(): # https://www.geeksforgeeks.org/how-to-split-explode-pandas-d
     sics_exploded = sics_exploded['nature_of_business'].str.split().explode() # Returns as a series, not a dataframe
     sics_counted = sics_exploded.groupby(sics_exploded).count() # https://stackoverflow.com/questions/33483670/how-to-group-a-series-by-values-in-pandas
     sics_counted = sics_counted.sort_values(ascending=False)
-    st.write(sics_counted)
+    sics_counted = pd.DataFrame(sics_counted)
+    sics_counted = sics_counted.rename(columns={'nature_of_business': 'Count'})
+    sics_counted['SIC Code'] = sics_counted.index
+    sics_counted['SIC Code'] = sics_counted['SIC Code'].astype(str)
+    sics_counted = pd.merge(sics_counted, sic_descriptions, on='SIC Code')
+    # st.write(sics_counted)
+    # st.write(sics_counted.columns.values)
     fig_sics = px.pie(
-        sics_exploded.head(30), 
-        values='nature_of_business', 
-        names='nature_of_business',
-        title='Top 30 SIC codes',
+        sics_counted.head(30), 
+        values='Count', 
+        names='SIC Code',
+        hover_name='Description',
+        title='Top 30 SIC codes (Hover for SIC description)',
         hole=0.3,
         )
     st.plotly_chart(fig_sics)
@@ -91,7 +102,8 @@ def dashboard():
     with right_column:
         st.subheader("Total Private Limited Companies")
         st.subheader(f"{total_private:,}")
-    return st.write(deduped)
+    with st.expander('Expand full deduplicated company list'):
+        st.write(deduped)
 
 # Main 
 if len(deduped) > 1:
@@ -99,3 +111,10 @@ if len(deduped) > 1:
     dashboard()
     explode_sic()
 
+st.divider()
+
+with st.expander("More info about SIC Codes", icon=":material/help:"):
+    st.markdown(""" ### Standard Industrial Classification (SIC) codes
+    The Standard Industrial Classification (SIC) is a system for classifying industries. This tool works off of the UK's Companies House condensed list of codes, which are available from the Office of National Statistics (ONS).
+    """)
+    st.write(sic_descriptions)
